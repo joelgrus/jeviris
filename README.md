@@ -26,7 +26,10 @@ uv run jeviris --dry-run
 
 `python -m jeviris` also works after installation. Use `--help` for all options.
 The default model is `~typesafe/jev-latest`; use `--model typesafe/jev-1.14`
-to select a version explicitly. The resolved model is recorded in every result.
+to select a version explicitly, or pass another Decisions API model such as
+`--model google/gemini-decision-1`. Responses must match the requested model
+or its dated snapshot; the default Jev alias accepts resolved Jev versions.
+The resolved model is recorded in every result.
 
 The experiment uses a seeded, stratified 105/45 train/test split. All treatments
 use the same held-out rows. `zero_shot` supplies only the flower's measurements;

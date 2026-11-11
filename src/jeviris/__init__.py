@@ -92,10 +92,19 @@ def build_request(
     }
 
 
-def parse_response(data: JSONObject) -> Prediction:
+def parse_response(data: JSONObject, requested_model: str = MODEL) -> Prediction:
     model = data.get("model")
-    if not isinstance(model, str) or not re.fullmatch(r"~?typesafe/jev-(?:latest|\d[\w.-]*)", model):
-        raise ValueError(f"Unexpected response model: {model!r}")
+    if requested_model == MODEL:
+        matches = isinstance(model, str) and bool(
+            re.fullmatch(r"~?typesafe/jev-\d[\w.-]*", model)
+        )
+    else:
+        matches = isinstance(model, str) and (
+            model == requested_model
+            or bool(re.fullmatch(re.escape(requested_model) + r"-\d{8}", model))
+        )
+    if not matches:
+        raise ValueError(f"Unexpected response model: {model!r} (requested {requested_model!r})")
     answer = data["answers"]["species"]
     if answer.get("type") != "choice" or answer.get("choice") not in SPECIES:
         raise ValueError(f"Invalid species answer: {answer!r}")
@@ -121,7 +130,7 @@ async def classify(
             try:
                 response = await client.post(ENDPOINT, json=payload)
                 response.raise_for_status()
-                result = parse_response(response.json())
+                result = parse_response(response.json(), payload.get("model", MODEL))
                 result["elapsed_seconds"] = time.perf_counter() - started
                 result["attempts"] = attempt + 1
                 return result

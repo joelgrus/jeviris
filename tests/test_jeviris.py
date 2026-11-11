@@ -38,6 +38,15 @@ class Requests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 jeviris.parse_response(data)
 
+    def test_explicit_model_and_dated_snapshot(self) -> None:
+        requested = "google/gemini-decision-1"
+        for resolved in [requested, requested + "-20261111"]:
+            data = answer()
+            data["model"] = resolved
+            self.assertEqual(jeviris.parse_response(data, requested)["routed_model"], resolved)
+        with self.assertRaises(ValueError):
+            jeviris.parse_response(answer(), requested)
+
 
 class API(unittest.IsolatedAsyncioTestCase):
     async def test_real_http_contract(self) -> None:
@@ -45,10 +54,12 @@ class API(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(str(request.url), jeviris.ENDPOINT)
             self.assertEqual(request.headers["Authorization"], "Bearer test")
             self.assertIn("questions", json.loads(request.content))
-            return httpx.Response(200, json=answer())
+            data = answer()
+            data["model"] = "google/gemini-decision-1-20261111"
+            return httpx.Response(200, json=data)
         async with httpx.AsyncClient(transport=httpx.MockTransport(handle),
                                      headers={"Authorization": "Bearer test"}) as client:
-            result = await jeviris.classify(client, asyncio.Semaphore(1), {"questions": {}})
+            result = await jeviris.classify(client, asyncio.Semaphore(1), {"model": "google/gemini-decision-1", "questions": {}})
         self.assertEqual(result["species"], "setosa")
         self.assertEqual(result["confidence"], 1)
 
