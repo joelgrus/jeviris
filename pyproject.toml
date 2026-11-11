@@ -1,0 +1,21 @@
+[project]
+name = "jeviris"
+version = "0.1.0"
+description = "Evaluate Jev on Iris classification through OpenRouter"
+readme = "README.md"
+authors = [
+    { name = "Joel Grus", email = "joelgrus@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.0",
+    "httpx>=0.28",
+    "scikit-learn>=1.9.1",
+]
+
+[project.scripts]
+jeviris = "jeviris:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
